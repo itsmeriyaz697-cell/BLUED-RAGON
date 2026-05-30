@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esports Live Match Center</title>
+    
+    <style>
+        /* CSS STYLING */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0b0e14;
+            color: #e2e8f0;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: #ff4655; /* Esports red highlight */
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: #94a3b8;
+        }
+
+        .match-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .loading {
+            text-align: center;
+            color: #94a3b8;
+            font-style: italic;
+            padding: 2rem;
+        }
+
+        /* Match Card Layout */
+        .match-card {
+            background-color: #171c26;
+            border: 1px solid #232a38;
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .match-card:hover {
+            transform: translateY(-2px);
+            border-color: #ff4655;
+        }
+
+        .team {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .team.team-a { justify-content: flex-end; text-align: right; }
+        .team.team-b { justify-content: flex-start; text-align: left; }
+
+        .team-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        /* Match Info Center Block */
+        .match-details {
+            text-align: center;
+            padding: 0 1.5rem;
+        }
+
+        .game-tag {
+            background-color: #232a38;
+            color: #ff4655;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+
+        .vs {
+            font-weight: 800;
+            color: #64748b;
+            margin-bottom: 0.25rem;
+        }
+
+        .time {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 0.75rem;
+        }
+
+        .watch-btn {
+            display: inline-block;
+            background-color: #ff4655;
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+
+        .watch-btn:hover {
+            background-color: #e03d4b;
+        }
+
+        /* Live Status Animation */
+        .live-badge {
+            background-color: #22c55e;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>🎮 Live Match Center</h1>
+            <p>Real-time tournament schedules and stream links</p>
+        </header>
+
+        <main id="match-list" class="match-list">
+            <div class="loading">Connecting to proxy server...</div>
+        </main>
+    </div>
+
+    <script>
+        // JAVASCRIPT LOGIC
+        const API_URL = 'http://localhost:3000/api/matches';
+
+        async function fetchLiveMatches() {
+            const matchListContainer = document.getElementById('match-list');
+            
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error("Network response error");
+                
+                const liveMatches = await response.json();
+                
+                if (liveMatches.length === 0) {
+                    matchListContainer.innerHTML = '<div class="loading">No matches scheduled today.</div>';
+                    return;
+                }
+
+                displayMatches(liveMatches);
+            } catch (error) {
+                console.error("Frontend Fetch Error:", error);
+                matchListContainer.innerHTML = `
+                    <div class="loading" style="color: #ff4655; font-style: normal;">
+                        <strong>Error connecting to data pipeline.</strong><br>
+                        Make sure your local <code>server.js</code> is running on port 3000.
+                    </div>`;
+            }
+        }
+
+        function displayMatches(matches) {
+            const matchListContainer = document.getElementById('match-list');
+            matchListContainer.innerHTML = ''; 
+
+            matches.forEach(match => {
+                const buttonClass = match.status === 'live' ? 'watch-btn live-badge' : 'watch-btn';
+                const buttonText = match.status === 'live' ? '🔴 Watch Live' : 'View Stream';
+
+                const matchCardHTML = `
+                    <div class="match-card">
+                        <div class="team team-a">
+                            <span class="team-name">${match.teamA}</span>
+                        </div>
+                        
+                        <div class="match-details">
+                            <span class="game-tag">${match.game}</span>
+                            <div class="vs">VS</div>
+                            <div class="time">${match.time}</div>
+                            <a href="${match.streamUrl}" target="_blank" class="${buttonClass}">${buttonText}</a>
+                        </div>
+                        
+                        <div class="team team-b">
+                            <span class="team-name">${match.teamB}</span>
+                        </div>
+                    </div>
+                `;
+                
+                matchListContainer.innerHTML += matchCardHTML;
+            });
+        }
+
+        // Fire request once DOM tree finishes parsing
+        document.addEventListener('DOMContentLoaded', fetchLiveMatches);
+    </script>
+</body>
+</html>
