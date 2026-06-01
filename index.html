@@ -1,99 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Football Fixtures</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
-      margin: 0;
-      padding: 20px;
-    }
+<meta charset="UTF-8">
+<title>Big Football Matches</title>
 
-    h1 {
-      text-align: center;
-    }
+<style>
+  body {
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+    margin: 0;
+    padding: 20px;
+  }
 
-    .controls {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+  h1 {
+    text-align: center;
+  }
 
-    input, button {
-      padding: 10px;
-      margin: 5px;
-      border-radius: 8px;
-      border: none;
-    }
+  .box {
+    text-align: center;
+    margin-bottom: 20px;
+  }
 
-    button {
-      background: #22c55e;
-      color: white;
-      cursor: pointer;
-    }
+  input, button {
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    margin: 5px;
+  }
 
-    .card {
-      background: #1e293b;
-      margin: 10px auto;
-      padding: 15px;
-      border-radius: 12px;
-      max-width: 500px;
-    }
-  </style>
+  button {
+    background: green;
+    color: white;
+    cursor: pointer;
+  }
+
+  .card {
+    background: #1e293b;
+    margin: 10px auto;
+    padding: 15px;
+    border-radius: 12px;
+    max-width: 500px;
+  }
+</style>
+
 </head>
+
 <body>
 
-<h1>⚽ Football Fixtures</h1>
+<h1>⚽ Big Football Matches</h1>
 
-<div class="controls">
-  <input type="date" id="dateInput" />
-  <button onclick="getMatches()">Get Matches</button>
+<div class="box">
+  <input type="date" id="dateInput">
+  <button onclick="loadMatches()">Show Matches</button>
 </div>
 
 <div id="results"></div>
 
 <script>
-const API_KEY = "7f6fd035e5cb2cb22be0a1001915a7cd";
 
-function getMatches() {
+const API_KEY = "PASTE_YOUR_NEW_KEY_HERE";
+
+// BIG leagues only
+const leagues = [39, 140, 78, 135, 2];
+
+function loadMatches() {
   const date = document.getElementById("dateInput").value;
+  const results = document.getElementById("results");
+  results.innerHTML = "Loading...";
 
-  fetch(`https://v3.football.api-sports.io/fixtures?date=${date}`, {
-    headers: {
-      "x-apisports-key": API_KEY
-    }
-  })
-  .then(res => res.json())
-  .then(data => {
-    const container = document.getElementById("results");
-    container.innerHTML = "";
+  results.innerHTML = "";
 
-    if (!data.response.length) {
-      container.innerHTML = "<p style='text-align:center'>No matches found</p>";
-      return;
-    }
+  leagues.forEach(league => {
 
-    data.response.forEach(match => {
-      const home = match.teams.home.name;
-      const away = match.teams.away.name;
-      const score = match.goals.home + " - " + match.goals.away;
+    fetch(`https://v3.football.api-sports.io/fixtures?date=${date}&league=${league}`, {
+      headers: {
+        "x-apisports-key": "7f6fd035e5cb2cb22be0a1001915a7cd";
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
 
-      const div = document.createElement("div");
-      div.className = "card";
-      div.innerHTML = `
-        <h3>${home} vs ${away}</h3>
-        <p>Score: ${score ?? "N/A"}</p>
-        <p>Status: ${match.fixture.status.long}</p>
-      `;
+      data.response.forEach(match => {
 
-      container.appendChild(div);
+        const home = match teams.home.name;
+        const away = match teams.away.name;
+
+        const div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+          <h3>${home} vs ${away}</h3>
+          <p>Status: ${match.fixture.status.long}</p>
+          <p>Score: ${match.goals.home ?? 0} - ${match.goals.away ?? 0}</p>
+        `;
+
+        results.appendChild(div);
+      });
+
     });
-  })
-  .catch(err => console.log(err));
+
+  });
 }
+
 </script>
 
 </body>
-</html>/
+</html>
